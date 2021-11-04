@@ -94,7 +94,7 @@ def check_variable():
 def main():
     """Основная функция."""
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = 0
+    current_timestamp = int(time.time()) - RETRY_TIME
     url = ENDPOINT
     while True:
         try:
