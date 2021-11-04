@@ -48,10 +48,7 @@ def get_api_answer(url, current_timestamp):
 
 
 def parse_status(homework):
-    """
-    В зависимости от статуса проверки домашней рабтоы,
-    отправляет нужное сообщение.
-    """
+    """Отправляем статус проверки работы."""
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
     verdict = HOMEWORK_STATUSES[homework_status]
