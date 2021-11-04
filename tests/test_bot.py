@@ -1,9 +1,9 @@
+import os
 from http import HTTPStatus
 
 import requests
 import telegram
 import utils
-import os
 
 
 class MockResponseGET:
