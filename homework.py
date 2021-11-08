@@ -3,6 +3,7 @@ import os
 import sys
 import time
 
+from http import HTTPStatus
 import requests
 import telegram
 from dotenv import load_dotenv
@@ -29,6 +30,19 @@ logging.basicConfig(
 )
 
 
+class TGBotException(Exception):
+    """Выбрасывается если эндпоинт не доступен."""
+    pass
+
+
+class No_homework_titleException(Exception):
+    """
+    Выбрасывается если в ответи API
+    не названия домашней работы.
+    """
+    pass
+
+
 def send_message(bot, message):
     """Оправляем сообщение."""
     logging.info(f'message send {message}')
@@ -39,12 +53,16 @@ def get_api_answer(url, current_timestamp):
     """Посылаем запрос к API эндпоинта."""
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
     payload = {'from_date': current_timestamp}
-    homework_statuses = requests.get(url, params=payload, headers=headers)
-    if homework_statuses.status_code != 200:
-        message = 'Эндпоинт не доступен'
-        logging.critical(message)
-        raise Exception(message)
-    return homework_statuses.json()
+    try:
+        homework_statuses = requests.get(url, params=payload, headers=headers)
+        if homework_statuses.status_code != HTTPStatus.OK:
+            message = 'Эндпоинт не доступен'
+            logging.critical(message)
+            raise TGBotException(message)
+        return homework_statuses.json()
+    except requests.exceptions.RequestException as error:
+        message = f'Проблемы с подключением: {error}'
+        logging.error(message)
 
 
 def parse_status(homework):
@@ -55,7 +73,7 @@ def parse_status(homework):
     if homework_name is None:
         message = 'Нет названия домашней работы'
         logging.error(message)
-        raise Exception(message)
+        raise No_homework_titleException(message)
     if homework_status is None:
         message = 'Нет статуса работы'
         logging.error(message)
@@ -66,16 +84,14 @@ def parse_status(homework):
 def check_response(response):
     """Проверка ответа API эндпоинта."""
     homeworks = response.get('homeworks')
-    for homework in homeworks:
-        status = homework.get('status')
-        if status in HOMEWORK_STATUSES.keys():
-            return homeworks
-        else:
-            message = 'У домашней работы неизвестный статус'
-            logging.error(message)
-            raise Exception(message)
-    if homeworks is None:
+    if homeworks is None and len(homeworks) == 0:
         message = 'Нет домашней работы'
+        logging.error(message)
+        raise Exception(message)
+    homework_first = response.get('homeworks')[0]
+    response_status = homework_first.get('status')
+    if response_status not in HOMEWORK_STATUSES.keys():
+        message = 'У домашней работы неизвестный статус'
         logging.error(message)
         raise Exception(message)
     return homeworks
@@ -86,7 +102,7 @@ def check_variable():
     variable = ['PRACTICUM_TOKEN', 'TELEGRAM_TOKEN', 'CHAT_ID']
     for const in variable:
         if os.getenv(const) is None:
-            message = 'Отсутствия одна из обязательных переменных'
+            message = 'Отсутствует одна из обязательных переменных'
             logging.critical(message)
             raise sys.exit(message)
 
@@ -94,7 +110,7 @@ def check_variable():
 def main():
     """Основная функция."""
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = int(time.time()) - RETRY_TIME
+    current_timestamp = 0
     url = ENDPOINT
     while True:
         try:
@@ -111,7 +127,6 @@ def main():
                 chat_id=CHAT_ID, text=message
             )
             time.sleep(RETRY_TIME)
-            continue
 
 
 if __name__ == '__main__':
