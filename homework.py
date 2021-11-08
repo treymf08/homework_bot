@@ -2,8 +2,8 @@ import logging
 import os
 import sys
 import time
-
 from http import HTTPStatus
+
 import requests
 import telegram
 from dotenv import load_dotenv
@@ -32,14 +32,13 @@ logging.basicConfig(
 
 class TGBotException(Exception):
     """Выбрасывается если эндпоинт не доступен."""
+
     pass
 
 
 class No_homework_titleException(Exception):
-    """
-    Выбрасывается если в ответи API
-    не названия домашней работы.
-    """
+    """Выбрасывается если в ответи API не названия домашней работы."""
+
     pass
 
 
@@ -110,7 +109,7 @@ def check_variable():
 def main():
     """Основная функция."""
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = 0
+    current_timestamp = int(time.time()) - RETRY_TIME
     url = ENDPOINT
     while True:
         try:
