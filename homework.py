@@ -83,16 +83,17 @@ def parse_status(homework):
 def check_response(response):
     """Проверка ответа API эндпоинта."""
     homeworks = response.get('homeworks')
-    if homeworks is None and len(homeworks) == 0:
+    if homeworks is None:
         message = 'Нет домашней работы'
         logging.error(message)
         raise Exception(message)
-    homework_first = response.get('homeworks')[0]
-    response_status = homework_first.get('status')
-    if response_status not in HOMEWORK_STATUSES.keys():
-        message = 'У домашней работы неизвестный статус'
-        logging.error(message)
-        raise Exception(message)
+    if len(homeworks) != 0:
+        homework_first = response.get('homeworks')[0]
+        response_status = homework_first.get('status')
+        if response_status not in HOMEWORK_STATUSES.keys():
+            message = 'У домашней работы неизвестный статус'
+            logging.error(message)
+            raise Exception(message)
     return homeworks
 
 
