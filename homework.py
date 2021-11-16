@@ -38,7 +38,7 @@ class TGBotException(Exception):
     pass
 
 
-class No_homework_titleException(Exception):
+class NoHomeworkTitleException(Exception):
     """Выбрасывается если в ответи API нет названия домашней работы."""
 
     pass
@@ -52,20 +52,20 @@ def send_message(bot, message):
 
 def get_api_answer(current_timestamp):
     """Посылаем запрос к API эндпоинта."""
+    timestamp = current_timestamp
+    params = {'from_date': timestamp}
     try:
-        timestamp = current_timestamp
-        params = {'from_date': timestamp}
         response = requests.get(
             ENDPOINT, params=params, headers=HEADERS
         )
-        if response.status_code != HTTPStatus.OK:
-            message = 'Эндпоинт не доступен'
-            logging.critical(message)
-            raise TGBotException(message)
-        return response.json()
     except requests.exceptions.RequestException as error:
         message = f'Проблемы с подключением: {error}'
         logging.error(message)
+    if response.status_code != HTTPStatus.OK:
+        message = 'Эндпоинт не доступен'
+        logging.critical(message)
+        raise TGBotException(message)
+    return response.json()
 
 
 def check_response(response):
@@ -86,7 +86,7 @@ def parse_status(homework):
     if homework_name is None:
         message = 'Нет названия домашней работы'
         logging.error(message)
-        raise No_homework_titleException(message)
+        raise NoHomeworkTitleException(message)
     if homework_status is None:
         message = 'Нет статуса работы'
         logging.error(message)
@@ -105,7 +105,7 @@ def check_tokens():
     for const in variable:
         if const is None:
             chek_result = False
-        return chek_result
+    return chek_result
 
 
 def main():
