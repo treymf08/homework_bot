@@ -7,7 +7,7 @@
 ## Как запустить проект:
 Клонировать репозиторий и перейти в него в командной строке:
 ```
-git clone https://github.com/Saladin366/homework_bot.git
+git clone https://github.com/treymf08/homework_bot.git
 ```
 ```
 cd homework_bot
